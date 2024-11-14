@@ -22,7 +22,7 @@ import { ref } from 'vue'
 
 interface LoginResponse {
     token: string;
-    token: string;
+    token_type: string;
 }
 
 const pending = ref(false)
