@@ -13,13 +13,35 @@ import { useRouter } from 'vue-router'
 const authStore = useAuthStore()
 const router = useRouter()
 
+// Example using fetch
+async function logout() {
+  try {
+    const response = await fetch('http://localhost:8000/api/auth/logout', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+
+    if (response.ok) {
+      // Clear token from localStorage
+      localStorage.removeItem('token');
+      // Redirect to login page or home
+      // window.location.href = '/login';
+    }
+  } catch (error) {
+    console.error('Logout failed:', error);
+  }
+}
+
 // Execute logout on page load
 onMounted(() => {
   // Clear local auth state
-  authStore.setUsername(null)
+  authStore.setUsername("")
 })
 
 const goToHome = () => {
+  logout()
   router.push('/')
 }
 </script>
