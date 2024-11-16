@@ -7,15 +7,23 @@
                 <li><a href="/fast_innovation">Fast Innovation</a></li>
                 <li><a href="/about">About</a></li>
             </ul>
-            <div class="auth-buttons">
+
+            <div class="auth-buttons" v-if="username">
+                user: {{ username }}
+                <nuxt-link to="/logout">Logout</nuxt-link>
+            </div>
+            <div class="auth-buttons" v-else>
                 <nuxt-link to="/login">Login</nuxt-link>
             </div>
+
         </nav>
     </div>
 </template>
 
-
-
+<script setup>
+const authStore = useAuthStore()
+const { username } = storeToRefs(authStore)
+</script>
 
 <style scoped>
 .navbar {

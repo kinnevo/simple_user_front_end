@@ -19,24 +19,35 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue'
+import { useSessionStore } from '~/stores/session'
+import { useAuthStore } from '~/stores/auth'
 
 interface LoginResponse {
     token: string;
-    token: string;
+    token_type: string;
+    user: {
+        username: string;
+        // other user fields
+    };
+    stage?: number;
 }
 
 const pending = ref(false)
 
 const username = ref('')
 const password = ref('')
-pending.value = false
 
 const error = ref('')
+
+const sessionStore = useSessionStore()
+
 
 const handleLogin = async () => {
     console.log('Login attempted:', { username: username.value, password: password.value })
     pending.value = true
     error.value = '' // Reset error message
+    const authStore = useAuthStore() as AuthStoreType
+
 
     try {
         const formData = new URLSearchParams()
@@ -59,12 +70,21 @@ const handleLogin = async () => {
 
         // Handle successful login
         if (data) {
-            // Store token if your API returns one
-            // const token = data.token
-            // Save token to localStorage or use auth store
+            authStore.setUsername(username.value)
+            authStore.setToken(data.token)
+
+            // Store session data
+            sessionStore.setSession({
+                sessionId: data.token, // using token as session ID
+                user: {
+                    ...data.user,
+                    username: username.value
+                },
+                stage: data.stage || 1 // default to stage 1 if not provided
+            })
 
             // Redirect to dashboard or home page
-            navigateTo('/')
+            navigateTo(`/stage/${data.stage || 1}`)
         }
     } catch (e: any) {
         error.value = 'An error occurred during login'
