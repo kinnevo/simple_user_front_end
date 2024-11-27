@@ -57,7 +57,7 @@ const handleMove = async (direction: 'next' | 'previous') => {
     try {
         await sessionStore.moveStage(direction);
         const newStage = direction === 'next' ? stage + 1 : stage - 1;
-        await router.push(`/stage/${newStage}?sessionId=${sessionStore.session?.id}`);
+        await router.push(`/stage/${newStage}?sessionId=${sessionStore.session}`);
     } catch (error) {
         console.error('Failed to move stage:', error);
     }
