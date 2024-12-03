@@ -1,110 +1,119 @@
-// store/session.ts
+// stores/session.ts
 import { defineStore } from 'pinia';
 
+const MAX_STAGES = 7; // Define maximum number of stages
+
 interface SessionState {
-    session: string | null;
-    user: any | null;
-    stage: number;
+    sessionStage: number;
+    sessionId: string | null;
+    user: {
+        username: string;
+    } | null;
     loading: boolean;
 }
 
-interface StageData {
-    stage: number;
-}
-
-const MAX_STAGES = 7; // adjust number as needed
-
 export const useSessionStore = defineStore('session', {
     state: (): SessionState => ({
-        session: null,
+        sessionStage: 1,
+        sessionId: null,
         user: null,
-        stage: 1,
         loading: false
     }),
 
-    getters: {
-        isSessionActive: (state) => state.session !== null,
-        canMoveNext(): boolean {
-            return this.stage < MAX_STAGES;
-        },
-        canMovePrevious(): boolean {
-            return this.stage > 1;
-        }
-    },
-
     actions: {
-        setSession(sessionData: any) {
-            this.session = sessionData.sessionId
-            this.user = sessionData.user
-            this.stage = sessionData.stage || 1
-        },
-
-        clearSession() {
-            this.session = null
-            this.user = null
-            this.stage = 1
-        },
-
-        async moveStage(direction: 'next' | 'previous') {
-            if (direction === 'next' && !this.canMoveNext) return;
-            if (direction === 'previous' && !this.canMovePrevious) return;
-
-            this.loading = true;
-            try {
-                const newStage = direction === 'next' ? this.stage + 1 : this.stage - 1;
-                await fetch(`/api/sessions/${this.session}/stage`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ stage: newStage })
-                });
-                this.stage = newStage;
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        async updateStage(data: StageData) {
-            this.loading = true;
-            try {
-                await fetch(`/api/sessions/${this.session}/stage`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-                this.stage = data.stage;
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        async loadSession(sessionId: string) {
-            this.loading = true;
-            try {
-                const response = await fetch(`/api/sessions/${sessionId}`); // adjust API endpoint as needed
-                this.session = await response.json();
-            } finally {
-                this.loading = false;
-            }
+        setLoading(value: boolean) {
+            this.loading = value;
         },
 
         async createSession() {
-            const response = await fetch('/api/sessions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            const data = await response.json()
-            this.setSession(data.sessionId)
-            return data.sessionId
+            try {
+                const response = await $fetch<{ _id: string }>('http://localhost:8000/api/sessions', {
+                    method: 'POST',
+                    headers: {
+                        'accept': 'application/json',
+                    }
+                });
+
+
+                this.sessionId = response._id;
+                return response._id;
+            } catch (error) {
+                console.error('Failed to create session:', error);
+                throw error;
+            }
         },
 
-        logout() {
-            this.user = null;
-            this.session = null;
-            navigateTo('/login');
+        setSession(session: Partial<SessionState>) {
+            console.log('Setting session with:', session); // Debug log
+
+            if (session.sessionStage) this.sessionStage = session.sessionStage;
+            if (session.sessionId) this.sessionId = session.sessionId;
+            if (session.user) this.user = session.user;
         },
+
+        async moveStage(direction: 'next' | 'previous') {
+            try {
+                const newStage = direction === 'next'
+                    ? this.sessionStage + 1
+                    : this.sessionStage - 1;
+
+                // Validate stage bounds
+                if (newStage < 1 || newStage > MAX_STAGES) {
+                    throw new Error(`Cannot move ${direction}. Stage limit reached.`);
+                }
+
+                this.setLoading(true);
+
+                // Then call API
+                await $fetch(`http://localhost:8000/api/sessions/${this.sessionId}/move/${direction}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ stage: newStage }),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                // Update state after successful API call
+                this.sessionStage = newStage;
+
+            } catch (error) {
+                console.error(`Failed to move ${direction}:`, error);
+                throw error;
+            } finally {
+                this.setLoading(false);
+            }
+        },
+
+        clearSession() {
+            this.sessionStage = 1;
+            this.sessionId = null;
+            this.user = null;
+        },
+
+        async logout() {
+            try {
+                if (this.sessionId) {
+                    // Call your API to close the session
+                    await $fetch(`http://localhost:8000/api/sessions/${this.sessionId}`, {
+                        method: 'DELETE'
+                    });
+                }
+            } catch (error) {
+                console.error('Error closing session:', error);
+            } finally {
+                this.clearSession();
+            }
+        },
+
+        async updateStage(stage: number) {
+            this.sessionStage = stage;
+            // Add any API calls or additional logic needed
+        }
+    },
+
+    getters: {
+        hasActiveSession: (state) => !!state.sessionId,
+        canMoveNext: (state) => state.sessionStage < MAX_STAGES,
+        canMovePrevious: (state) => state.sessionStage > 1
     }
 });

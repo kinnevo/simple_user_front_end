@@ -42,7 +42,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { useSessionStore } from '@/store/session';
+import { useSessionStore } from '@/stores/session';
 import type { StageDirection } from '@/types/session';
 
 const sessionStore = useSessionStore();

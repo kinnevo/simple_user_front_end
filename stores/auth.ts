@@ -6,7 +6,6 @@ interface AuthState {
     token: string | null
     username: string
     password: string | null
-    user: string | null
 }
 export type AuthStoreType = ReturnType<typeof useAuthStore>
 export const useAuthStore = defineStore('auth', {
@@ -15,12 +14,11 @@ export const useAuthStore = defineStore('auth', {
         token: useNuxtApp().isClient ? localStorage.getItem('token') : null,
         username: '',
         password: null,
-        user: null
     }),
 
     getters: {
         isAuthenticated: (state) => !!state.token,
-        currentUser: (state) => state.user
+        currentUser: (state) => state.username
     },
 
     actions: {

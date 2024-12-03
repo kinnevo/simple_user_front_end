@@ -24,7 +24,7 @@ export interface SessionState {
 
 export type StageDirection = 'next' | 'previous';
 
-export interface User {
+export interface Username {
     id: string;
     name: string;
     email: string;

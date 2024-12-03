@@ -40,14 +40,12 @@ const password = ref('')
 const error = ref('')
 
 const sessionStore = useSessionStore()
-
+const authStore = useAuthStore()
 
 const handleLogin = async () => {
     console.log('Login attempted:', { username: username.value, password: password.value })
     pending.value = true
     error.value = '' // Reset error message
-    const authStore = useAuthStore() as AuthStoreType
-
 
     try {
         const formData = new URLSearchParams()
@@ -62,29 +60,42 @@ const handleLogin = async () => {
             }
         })
 
-        // Add this console.log to see the response data
-        console.log('Login successful:', {
-            token: data.token,
-            username: username.value
-        })
-
         // Handle successful login
         if (data) {
+            // Auth store handles JWT token and user authentication
             authStore.setUsername(username.value)
             authStore.setToken(data.token)
 
-            // Store session data
-            sessionStore.setSession({
-                sessionId: data.token, // using token as session ID
-                user: {
-                    ...data.user,
-                    username: username.value
-                },
-                stage: data.stage || 1 // default to stage 1 if not provided
-            })
+            // Create a new session
+            try {
+                const response = await sessionStore.createSession();
+                console.log('Session creation response:', response); // Debug log
 
-            // Redirect to dashboard or home page
-            navigateTo(`/stage/${data.stage || 1}`)
+                if (!response) {
+                    throw new Error('Failed to get session ID from response');
+                }
+
+                // Session store handles session-specific data
+                sessionStore.setSession({
+                    sessionStage: data.stage || 1,
+                    sessionId: response,
+                    user: {
+                        username: username.value
+                    }
+                });
+
+                console.log('Session state after setting:', {
+                    sessionId: sessionStore.sessionId,
+                    sessionNumber: sessionStore.sessionStage,
+                    user: sessionStore.user
+                }); // Debug log
+
+                // Redirect to dashboard or home page
+                navigateTo(`/stage/${data.stage || 1}`);
+            } catch (sessionError) {
+                console.error('Failed to create session:', sessionError);
+                error.value = 'Failed to create session';
+            }
         }
     } catch (e: any) {
         error.value = 'An error occurred during login'

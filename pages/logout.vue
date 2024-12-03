@@ -9,39 +9,19 @@
 <script lang="ts" setup>
 import { useAuthStore } from '~/stores/auth'
 import { useRouter } from 'vue-router'
+import { useSessionStore } from '~/stores/session'
 
 const authStore = useAuthStore()
+const sessionStore = useSessionStore()
 const router = useRouter()
 
-// Example using fetch
-async function logout() {
-  try {
-    const response = await fetch('http://localhost:8000/api/auth/logout', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-
-    if (response.ok) {
-      // Clear token from localStorage
-      localStorage.removeItem('token');
-      // Redirect to login page or home
-      // window.location.href = '/login';
-    }
-  } catch (error) {
-    console.error('Logout failed:', error);
-  }
-}
-
-// Execute logout on page load
-onMounted(() => {
-  // Clear local auth state
-  authStore.setUsername("")
+onMounted(async () => {
+  await sessionStore.logout()
+  authStore.clearAuth()
+  router.push('/login')
 })
 
 const goToHome = () => {
-  logout()
   router.push('/')
 }
 </script>

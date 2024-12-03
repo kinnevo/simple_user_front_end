@@ -53,7 +53,7 @@ const sessionStore = useSessionStore()
 onMounted(async () => {
     try {
         loading.value = true
-        // Get user's sessions
+        // Get username's sessions
         sessions.value = await sessionStore.getUserSessions()
     } catch (err) {
         error.value = 'Failed to load sessions'

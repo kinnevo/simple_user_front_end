@@ -6,7 +6,7 @@
         <nav class="menu">
             <NuxtLink v-if="sessionStore?.session" :to="`/stage/1?sessionId=${sessionStore?.session?.id}`"
                 class="menu-item">
-                This is the section for a logged in user
+                This is the section for a logged in username
 
                 Go to Stage 1
             </NuxtLink>

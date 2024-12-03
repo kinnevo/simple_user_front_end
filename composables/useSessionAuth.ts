@@ -1,11 +1,11 @@
 // composables/useSessionAuth.ts
-import type { User } from '@/types/session';
+import type { Username } from '@/types/session';
 
 export const useSessionAuth = () => {
-    const user = useCookie('user-token');
+    const username = useCookie('username');
 
     const isAuthenticated = computed(() => {
-        return !!user.value;
+        return !!username.value;
     });
 
     return {

@@ -1,10 +1,10 @@
 <!-- pages/home.vue -->
 <template>
   <div class="container mx-auto px-4 py-8">
-    <!-- User Welcome -->
+    <!-- Username Welcome -->
     <div class="mb-8">
       <h1 class="text-2xl font-bold">
-        Welcome, {{ user?.name }}
+        Welcome, {{ username }}
       </h1>
       <p class="text-gray-600">
         Manage your sessions below
@@ -63,7 +63,7 @@ const sessionStore = useSessionStore()
 const authStore = useAuthStore()
 
 // Computed
-const user = computed(() => authStore.state.user)
+const username = computed(() => authStore.state.username)
 
 // Methods
 const createNewSession = async () => {
