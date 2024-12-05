@@ -21,10 +21,7 @@ export default defineNuxtConfig({
   },
   pages: true,
   runtimeConfig: {
-    // Private keys are only available on the server
     FASTAPI_URL: process.env.FASTAPI_URL || 'http://localhost:8000',
-
-    // Public keys that are exposed to the client
     public: {
       apiBase: '/api'
     }
